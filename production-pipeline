@@ -1,0 +1,537 @@
+{
+  "keepWaitingPipelines": false,
+  "lastModifiedBy": "anonymous",
+  "limitConcurrent": true,
+  "schema": "1",
+  "spelEvaluator": "v4",
+  "stages": [
+    {
+      "account": "my-k8s-account",
+      "cloudProvider": "kubernetes",
+      "manifests": [
+        {
+          "apiVersion": "v1",
+          "kind": "Namespace",
+          "metadata": {
+            "name": "deploy-test"
+          }
+        }
+      ],
+      "moniker": {
+        "app": "dev"
+      },
+      "name": "Create NameSpace deploy-test",
+      "refId": "1",
+      "requisiteStageRefIds": [],
+      "skipExpressionEvaluation": false,
+      "source": "text",
+      "trafficManagement": {
+        "enabled": false,
+        "options": {
+          "enableTraffic": false,
+          "services": []
+        }
+      },
+      "type": "deployManifest"
+    },
+    {
+      "account": "my-k8s-account",
+      "cloudProvider": "kubernetes",
+      "completeOtherBranchesThenFail": true,
+      "continuePipeline": false,
+      "failPipeline": false,
+      "manifests": [
+        {
+          "apiVersion": "v1",
+          "kind": "Service",
+          "metadata": {
+            "name": "service-deploy",
+            "namespace": "deploy-test"
+          },
+          "spec": {
+            "ports": [
+              {
+                "nodePort": 31005,
+                "port": 80,
+                "targetPort": 80
+              }
+            ],
+            "selector": {
+              "type": "prod"
+            },
+            "type": "NodePort"
+          }
+        }
+      ],
+      "moniker": {
+        "app": "dev"
+      },
+      "name": "Create Service",
+      "refId": "2",
+      "requisiteStageRefIds": [
+        "1"
+      ],
+      "skipExpressionEvaluation": false,
+      "source": "text",
+      "trafficManagement": {
+        "enabled": false,
+        "options": {
+          "enableTraffic": false,
+          "services": []
+        }
+      },
+      "type": "deployManifest"
+    },
+    {
+      "account": "my-k8s-account",
+      "cloudProvider": "kubernetes",
+      "manifests": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "Deployment",
+          "metadata": {
+            "name": "production",
+            "namespace": "deploy-test"
+          },
+          "spec": {
+            "replicas": 1,
+            "selector": {
+              "matchLabels": {
+                "type": "prod"
+              }
+            },
+            "template": {
+              "metadata": {
+                "labels": {
+                  "type": "prod"
+                }
+              },
+              "spec": {
+                "containers": [
+                  {
+                    "envFrom": [
+                      {
+                        "secretRef": {
+                          "name": "production-env"
+                        }
+                      }
+                    ],
+                    "image": "devendra.harbor.com:31000/inventyv/production:${trigger.payload.version}",
+                    "imagePullPolicy": "Always",
+                    "name": "prod-cont"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "moniker": {
+        "app": "dev"
+      },
+      "name": "Create Deployment",
+      "refId": "3",
+      "requisiteStageRefIds": [
+        "2"
+      ],
+      "skipExpressionEvaluation": false,
+      "source": "text",
+      "trafficManagement": {
+        "enabled": false,
+        "options": {
+          "enableTraffic": false,
+          "services": []
+        }
+      },
+      "type": "deployManifest"
+    },
+    {
+      "account": "my-k8s-account",
+      "alias": "runJob",
+      "application": "dev",
+      "cloudProvider": "kubernetes",
+      "completeOtherBranchesThenFail": false,
+      "continuePipeline": true,
+      "credentials": "my-k8s-account",
+      "failPipeline": false,
+      "manifest": {
+        "apiVersion": "batch/v1",
+        "kind": "Job",
+        "metadata": {
+          "name": "myjob",
+          "namespace": "deploy-test"
+        },
+        "spec": {
+          "backoffLimit": 0,
+          "template": {
+            "spec": {
+              "containers": [
+                {
+                  "args": [
+                    "status=0\nsleep 2\necho \"Job Started !!\"\nwhile [ $status -eq 0 ]; do\n    kubectl get pods -n deploy-test\n    \n    # Extract container-level status reasons\n    data=$(kubectl get pods -n deploy-test -o jsonpath='{.items[*].status.containerStatuses[*].state.waiting.reason}')\n    echo \"Pod Statuses: $data\"\n    \n    if echo \"$data\" | grep -q \"ErrImagePull\"; then\n        echo \"Exiting due to ErrImagePull\"\n        exit 1\n    elif echo \"$data\" | grep -q \"CrashLoopBackOff\"; then\n        echo \"Exiting due to CrashLoopBackOff\"\n        exit 1\n    elif echo \"$data\" | grep -q \"ImagePullBackOff\"; then\n        echo \"Exiting due to ImagePullBackOff\"\n        exit 1\n    elif echo \"$data\" | grep -q \"Error\"; then\n        echo \"Exiting due to Error\"\n        exit 1\n    elif echo \"$data\" | grep -q \"Failed\"; then\n        echo \"Exiting due to Failed\"\n        exit 1\n    elif echo \"$data\" | grep -q \"ContainerCreating\"; then\n        echo \"Containers are still creating... Waiting\"\n        sleep 5\n    elif [ -z \"$data\" ]; then\n        status=1\n        echo \"Success: No issues detected\"\n    else\n        echo \"Still Pending... Waiting\"\n        sleep 5\n    fi\ndone\nexit 0\n"
+                  ],
+                  "command": [
+                    "bash",
+                    "-c"
+                  ],
+                  "image": "bitnami/kubectl",
+                  "name": "pod-status-checker",
+                  "volumeMounts": [
+                    {
+                      "mountPath": ".kube",
+                      "name": "kube-vol"
+                    }
+                  ]
+                }
+              ],
+              "restartPolicy": "Never",
+              "volumes": [
+                {
+                  "hostPath": {
+                    "path": "/root/.kube",
+                    "type": "Directory"
+                  },
+                  "name": "kube-vol"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "name": "Job test",
+      "refId": "4",
+      "requisiteStageRefIds": [
+        "2"
+      ],
+      "source": "text",
+      "type": "runJobManifest"
+    },
+    {
+      "completeOtherBranchesThenFail": true,
+      "continuePipeline": false,
+      "failPipeline": false,
+      "name": "Fail",
+      "preconditions": [
+        {
+          "context": {
+            "stageName": "Job test",
+            "stageStatus": "FAILED_CONTINUE"
+          },
+          "failPipeline": true,
+          "type": "stageStatus"
+        }
+      ],
+      "refId": "5",
+      "requisiteStageRefIds": [
+        "4"
+      ],
+      "type": "checkPreconditions"
+    },
+    {
+      "name": "Create Fail",
+      "preconditions": [
+        {
+          "context": {
+            "stageName": "Fail",
+            "stageStatus": "FAILED_CONTINUE"
+          },
+          "failPipeline": true,
+          "type": "stageStatus"
+        }
+      ],
+      "refId": "6",
+      "requisiteStageRefIds": [
+        "5"
+      ],
+      "type": "checkPreconditions"
+    },
+    {
+      "account": "my-k8s-account",
+      "app": "dev",
+      "cloudProvider": "kubernetes",
+      "completeOtherBranchesThenFail": true,
+      "continuePipeline": false,
+      "failPipeline": false,
+      "location": "deploy-test",
+      "manifestName": "deployment deploy-prod",
+      "mode": "static",
+      "name": "Delete Test Deployment",
+      "options": {
+        "cascading": true
+      },
+      "refId": "7",
+      "requisiteStageRefIds": [
+        "4"
+      ],
+      "type": "deleteManifest"
+    },
+    {
+      "account": "my-k8s-account",
+      "cloudProvider": "kubernetes",
+      "manifests": [
+        {
+          "apiVersion": "v1",
+          "kind": "Namespace",
+          "metadata": {
+            "name": "production"
+          }
+        }
+      ],
+      "moniker": {
+        "app": "dev"
+      },
+      "name": "Namespace Production",
+      "refId": "8",
+      "requisiteStageRefIds": [
+        "3"
+      ],
+      "skipExpressionEvaluation": false,
+      "source": "text",
+      "trafficManagement": {
+        "enabled": false,
+        "options": {
+          "enableTraffic": false,
+          "services": []
+        }
+      },
+      "type": "deployManifest"
+    },
+    {
+      "account": "my-k8s-account",
+      "cloudProvider": "kubernetes",
+      "manifests": [
+        {
+          "apiVersion": "v1",
+          "kind": "Service",
+          "metadata": {
+            "name": "service-production",
+            "namespace": "production"
+          },
+          "spec": {
+            "ports": [
+              {
+                "nodePort": 31006,
+                "port": 5000,
+                "targetPort": 5000
+              }
+            ],
+            "selector": {
+              "type": "prod"
+            },
+            "type": "NodePort"
+          }
+        }
+      ],
+      "moniker": {
+        "app": "dev"
+      },
+      "name": "Service production",
+      "namespaceOverride": "",
+      "refId": "9",
+      "requisiteStageRefIds": [
+        "8"
+      ],
+      "skipExpressionEvaluation": false,
+      "source": "text",
+      "trafficManagement": {
+        "enabled": false,
+        "options": {
+          "enableTraffic": false,
+          "services": []
+        }
+      },
+      "type": "deployManifest"
+    },
+    {
+      "account": "my-k8s-account",
+      "alias": "runJob",
+      "application": "dev",
+      "cloudProvider": "kubernetes",
+      "completeOtherBranchesThenFail": false,
+      "continuePipeline": true,
+      "credentials": "my-k8s-account",
+      "failPipeline": false,
+      "manifest": {
+        "apiVersion": "batch/v1",
+        "kind": "Job",
+        "metadata": {
+          "name": "myjob-production",
+          "namespace": "production"
+        },
+        "spec": {
+          "backoffLimit": 0,
+          "template": {
+            "spec": {
+              "containers": [
+                {
+                  "args": [
+                    "status=0\nsleep 2\necho \"Job Started !!\"\nwhile [ $status -eq 0 ]; do\n    kubectl get pods -n production\n    \n    # Extract container-level status reasons\n    data=$(kubectl get pods -n production -o jsonpath='{.items[*].status.containerStatuses[*].state.waiting.reason}')\n    echo \"Pod Statuses: $data\"\n    \n    if echo \"$data\" | grep -q \"ErrImagePull\"; then\n        echo \"Exiting due to ErrImagePull\"\n        exit 1\n    elif echo \"$data\" | grep -q \"CrashLoopBackOff\"; then\n        echo \"Exiting due to CrashLoopBackOff\"\n        exit 1\n    elif echo \"$data\" | grep -q \"ImagePullBackOff\"; then\n        echo \"Exiting due to ImagePullBackOff\"\n        exit 1\n    elif echo \"$data\" | grep -q \"Error\"; then\n        echo \"Exiting due to Error\"\n        exit 1\n    elif echo \"$data\" | grep -q \"Failed\"; then\n        echo \"Exiting due to Failed\"\n        exit 1\n    elif echo \"$data\" | grep -q \"ContainerCreating\"; then\n        echo \"Containers are still creating... Waiting\"\n        sleep 5\n    elif [ -z \"$data\" ]; then\n        status=1\n        echo \"Success: No issues detected\"\n    else\n        echo \"Still Pending... Waiting\"\n        sleep 5\n    fi\ndone\nexit 0\n"
+                  ],
+                  "command": [
+                    "bash",
+                    "-c"
+                  ],
+                  "image": "bitnami/kubectl",
+                  "name": "pod-status-checker",
+                  "volumeMounts": [
+                    {
+                      "mountPath": ".kube",
+                      "name": "kube-vol"
+                    }
+                  ]
+                }
+              ],
+              "restartPolicy": "Never",
+              "volumes": [
+                {
+                  "hostPath": {
+                    "path": "/root/.kube",
+                    "type": "Directory"
+                  },
+                  "name": "kube-vol"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "name": "Job For Production",
+      "refId": "10",
+      "requisiteStageRefIds": [
+        "9"
+      ],
+      "source": "text",
+      "type": "runJobManifest"
+    },
+    {
+      "account": "my-k8s-account",
+      "cloudProvider": "kubernetes",
+      "manifests": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "Deployment",
+          "metadata": {
+            "name": "production",
+            "namespace": "production"
+          },
+          "spec": {
+            "replicas": 1,
+            "selector": {
+              "matchLabels": {
+                "type": "prod"
+              }
+            },
+            "template": {
+              "metadata": {
+                "labels": {
+                  "type": "prod"
+                }
+              },
+              "spec": {
+                "containers": [
+                  {
+                    "envFrom": [
+                      {
+                        "secretRef": {
+                          "name": "production-env"
+                        }
+                      }
+                    ],
+                    "image": "devendra.harbor.com:31000/inventyv/production:${trigger.payload.version}",
+                    "imagePullPolicy": "Always",
+                    "name": "prod-cont"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "moniker": {
+        "app": "dev"
+      },
+      "name": "Production Deployment",
+      "refId": "11",
+      "requisiteStageRefIds": [
+        "9"
+      ],
+      "skipExpressionEvaluation": false,
+      "source": "text",
+      "trafficManagement": {
+        "enabled": false,
+        "options": {
+          "enableTraffic": false,
+          "services": []
+        }
+      },
+      "type": "deployManifest"
+    },
+    {
+      "completeOtherBranchesThenFail": false,
+      "continuePipeline": false,
+      "failPipeline": false,
+      "name": "Fail",
+      "preconditions": [
+        {
+          "context": {
+            "stageName": "Job For Production",
+            "stageStatus": "FAILED_CONTINUE"
+          },
+          "failPipeline": true,
+          "type": "stageStatus"
+        }
+      ],
+      "refId": "12",
+      "requisiteStageRefIds": [
+        "10"
+      ],
+      "type": "checkPreconditions"
+    },
+    {
+      "account": "my-k8s-account",
+      "app": "dev",
+      "cloudProvider": "kubernetes",
+      "completeOtherBranchesThenFail": false,
+      "continuePipeline": false,
+      "failPipeline": true,
+      "location": "production",
+      "manifestName": "job myjob-production",
+      "mode": "static",
+      "name": "Delete Job",
+      "options": {
+        "cascading": true
+      },
+      "refId": "13",
+      "requisiteStageRefIds": [
+        "10"
+      ],
+      "type": "deleteManifest"
+    },
+    {
+      "account": "my-k8s-account",
+      "cloudProvider": "kubernetes",
+      "location": "production",
+      "manifestName": "deployment deployment-production",
+      "mode": "static",
+      "name": "Roll Back",
+      "numRevisionsBack": 1,
+      "refId": "14",
+      "requisiteStageRefIds": [
+        "12"
+      ],
+      "type": "undoRolloutManifest"
+    }
+  ],
+  "triggers": [
+    {
+      "enabled": true,
+      "payloadConstraints": {
+        "type": "production"
+      },
+      "pubsubSystem": "google",
+      "subscriptionName": "spinnaker-pubsub",
+      "type": "pubsub"
+    }
+  ],
+  "updateTs": "1744116171000"
+}
