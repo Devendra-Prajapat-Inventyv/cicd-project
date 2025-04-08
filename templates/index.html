@@ -1,0 +1,666 @@
+<html>
+  <head>
+
+    <title>{{ title }}</title>
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='assets/style.css')}}" />
+
+    <style>
+      /* General Styles */
+      * {
+        margin: 0;
+        padding: 0;
+        /* box-sizing: border-box; */
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(
+          to bottom right,
+          #dee9ff,
+          #ffebf9
+        ); /* Blue and purple */
+        color: #333;
+      }
+
+      h1 {
+        text-align: -webkit-start;
+        display: inline;
+
+        /* color: #7a00e6; Purple color */
+        /* margin-top: 20px; */
+        color: darkorange;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        font-weight: 700;
+      }
+
+      ul {
+        /* display: inline-flex; */
+        list-style: none;
+        height: fit-content;
+        padding: 6 0 6 0;
+        /* background: linear-gradient(to right, #6495ed, #b37ae6); */
+        border-radius: 12px;
+        width: fit-content;
+        /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
+      }
+
+      ul li {
+        margin: 0 6px;
+      }
+
+      ul li a {
+        text-decoration: none;
+        color: #fff;
+        padding: 6px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: background 0.3s ease, transform 0.2s ease;
+      }
+
+      ul li a:hover {
+        background: #ffffff00; /* Darker purple */
+        text-decoration: underline;
+        transform: scale(1.05);
+      }
+
+      hr {
+        border: 0;
+        height: 2px;
+        background: linear-gradient(
+          to right,
+          #6495ed,
+          #7a00e6,
+          #d1aecc
+        ); /* Blue and purple */
+        margin: 2px 2px;
+      }
+
+      /* Table Styles */
+      table {
+        border-collapse: separate;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      th,
+      td {
+        padding: 15px;
+        text-align: center;
+        border: 1px solid #ddd;
+        font-size: 16px;
+      }
+
+      th {
+        background: linear-gradient(
+          to right,
+          #6495ed,
+          #9a78b8,
+          #d1aecc
+        ); /* Blue and purple */
+        color: #fff;
+        font-weight: 600;
+      }
+
+      tr:nth-child(even) {
+        background: #f8f9fa;
+      }
+
+      /* tr:hover {
+                background: #e9ecef;
+                transition: background 0.3s ease;
+            */
+
+      .container table {
+        border-collapse: separate;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        background: #fff;
+        border-radius: 10px;
+        overflow: hidden;
+        padding: 10px;
+      }
+
+      /* Buttons */
+      button {
+        background: linear-gradient(
+          to right,
+          #6495ed,
+          #b983e9,
+          #d1aecc
+        ); /* Blue and purple */
+        color: #fff;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.3s ease, transform 0.2s ease;
+      }
+
+      .del-btn {
+        background: #d33232;
+        /* background: linear-gradient(to right, #e70a0a, #b983e9); Blue and purple */
+        color: #fff;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.3s ease, transform 0.2s ease;
+      }
+
+      .edit-btn {
+        background: #5353f5;
+        /* background: linear-gradient(to right, #4281f5, #b983e9); Blue and purple */
+        color: #fff;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.3s ease, transform 0.2s ease;
+      }
+
+      button:hover {
+        background: #6a00ff; /* Darker purple */
+        transform: scale(1.05);
+      }
+
+      /* Form Styles */
+      form {
+        /* text-align: -webkit-center; */
+        display: flex;
+        width: -webkit-fill-available;
+        margin: 20px auto;
+        padding: 12px;
+        align-items: center;
+        justify-content: space-between;
+        background: #fff;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+      }
+
+      form label {
+        font-size: 18px;
+      }
+
+      .container {
+        text-align: -webkit-center;
+      }
+
+      input,
+      textarea,
+      select {
+        /* width: ; */
+        padding: 6px;
+        /* margin: 0; */
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        /* box-sizing: border-box; */
+        font-size: 16px;
+      }
+
+      input:focus,
+      textarea:focus,
+      select:focus {
+        border-color: #6495ed; /* Blue color */
+        outline: none;
+        box-shadow: 0 0 5px rgba(65, 105, 225, 0.5); /* Blue shadow */
+      }
+
+      /* Footer */
+      footer {
+        text-align: center;
+        padding: 8px;
+        background: linear-gradient(
+          to right,
+          #6495ed,
+          #7a00e6,
+          #d1aecc
+        ); /* Blue and purple */
+        color: #fff;
+        font-weight: 500;
+      }
+      footer p {
+        margin: 0;
+      }
+
+      .navbar {
+        display: flex;
+        justify-content: start;
+        align-items: start;
+        margin: 20px 0;
+      }
+
+      .topbar {
+        align-items: flex-start;
+      }
+
+      .logout-btn:hover {
+        background: #a82828; /* Darker red on hover */
+        transform: scale(1.05);
+      }
+
+      main {
+        display: flex;
+        flex-direction: row;
+        justify-content: start;
+        align-items: start;
+        /* margin: 0 5%; */
+      }
+
+      /* Sidebar Styles */
+      nav {
+        /* position: fixed; */
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 250px;
+        background: linear-gradient(
+          to bottom,
+          #6495ed,
+          #7a00e6
+        ); /* Blue to purple */
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0px 20px;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+      }
+
+      nav h1 {
+        color: white;
+        margin-bottom: 20px;
+        font-size: 24px;
+        text-align: center;
+      }
+
+      nav hr {
+        width: 100%;
+        margin: 4px 0;
+        height: 2px;
+        background: salmon;
+      }
+
+      nav ul {
+        list-style: none;
+        padding: 0;
+        width: 100%;
+      }
+
+      nav ul li {
+        margin: 10px 0;
+        width: 100%;
+      }
+
+      nav ul li a {
+        text-decoration: none;
+        color: white;
+        padding: 10px 20px;
+        display: block;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: background 0.3s ease, transform 0.2s ease;
+      }
+
+      nav ul li a:hover {
+        background: rgba(255, 255, 255, 0.2); /* Slightly transparent white */
+        transform: scale(1.05);
+      }
+
+      .logout-btn {
+        background: #d33232; /* Red color for logout */
+        color: white;
+        padding: 10px 20px;
+        gap:10px;
+        /* display: block; */
+        text-align: center;
+        margin-top: auto; /* Push logout button to the bottom */
+        background: #d33232; /* Red color for logout */
+        color: #fff;
+        display: flex;
+        align-items: center;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.3s ease, transform 0.2s ease;
+        margin-bottom: 10px;
+      }
+
+      .logout-btn:hover {
+        background: #a82828; /* Darker red on hover */
+        transform: scale(1.05);
+      }
+
+      /* Main Content Styles */
+      .main-content {
+        padding: 20px;
+        width: -webkit-fill-available;
+      }
+
+      .priority-indicator {
+        height: 16px;
+        width: 16px;
+        margin: 2px 2px;
+        border: 1px solid black;
+        border-radius: 100%;
+      }
+
+    </style>
+
+  </head>
+
+  <body>
+    <main>
+
+      <!-- Sidebar -->
+      <nav>
+        <h1 style="margin-top: 16px">{{ heading }}</h1>
+
+        <hr />
+
+        <ul style="margin-top: 4px;">
+          <li>
+            <button
+              id="show-add-task-form"
+              onclick="toggleAddTaskForm()"
+              style="
+                color: white;
+                font-size: 18px;
+                font-weight: bold;
+                cursor: pointer;
+                padding: 10px 20px;
+                width: 100%;
+                text-align: center;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+                transition: background 0.3s ease, transform 0.2s ease;
+              "
+            >
+              Create new task
+            </button>
+          </li>
+
+          <li><a href="/list" class="{{ all }}">All Tasks</a></li>
+          <li>
+            <a href="/uncompleted" class="{{ uncompleted }}">Uncompleted</a>
+          </li>
+          <li><a href="/completed" class="{{ completed }}">Completed</a></li>
+        </ul>
+
+        <a href="/logout" class="logout-btn">
+          <span> Logout </span>
+          <img src="static/images/logout.svg" style="height: 24px; width: 24px" />
+        </a>
+      </nav>
+
+      <!-- Main Content -->
+      <div class="main-content">
+
+        <!-- Search bar -->
+        <form
+          action="/search"
+          method="GET"
+          style="
+            justify-content: space-between;
+            gap: 30px;
+            width: --webkit-fill-available;
+            margin-top: 0px;
+          ">
+
+          <select
+            name="refer"
+            id="refer"
+            style="
+              width: 100%;
+              padding: 10px;
+              border-radius: 8px;
+              /* border: none; */
+              border-width: 2px;
+            "
+            required
+          >
+            <option value="name">Name</option>
+            <option value="desc">Description</option>
+            <option value="creation_date">Date</option>
+            <option value="priority">Priority</option>
+          </select>
+
+          <input
+            type="text"
+            name="key"
+            placeholder="search..."
+            style="
+              width: 100%;
+              padding: 10px;
+              border-radius: 8px;
+              border-width: 2px;
+            "
+            required
+          />
+
+          <button
+            type="submit"
+            style="
+              padding: 10px;
+              background: #6495ed;
+              color: white;
+              border: none;
+              border-radius: 8px;
+              font-weight: 600;
+              cursor: pointer;
+            "
+          >
+            <img src="static/images/search.svg" style="height: 24px; width: 24px" />
+          </button>
+
+        </form>
+
+        <!-- Task List Section -->
+        <div id="task-list-section">
+          {% if task_list[0] %}
+
+          <!-- <b><big>All Tasks</big></b> -->
+          <div
+            class="container"
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+              gap: 20px;
+            "
+          >
+            {% for task in task_list %}
+
+            <div
+              class="card"
+              style="
+                background-color: #fff;
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                padding: 10px;
+              "
+            >
+
+              <div
+                class="card-header"
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+              >
+
+                <!-- Task status and title -->
+                <div style="display: flex; align-items: center">
+                  <a
+                    href="./done?_id={{ task['_id'] }}"
+                    style="margin-right: 10px"
+                  >
+                    <img
+                      src="static/images/{{task['done']}}.svg"
+                      style="height: 28px; width: 28px"
+                    />
+                  </a>
+
+                  <h2 style="margin: 0">{{ task["name"] }}</h2>
+                </div>
+
+                <!-- Edit/Delete Buttons -->
+                <div style="display: flex">
+                  <a
+                    href="./update?_id={{ task['_id'] }}"
+                    style="margin-right: 8px"
+                  >
+                    <img
+                      src="static/assets/edit.svg"
+                      style="height: 22px; width: 22px"
+                    />
+                  </a>
+                  <a href="./remove?_id={{ task['_id'] }}">
+                    <img
+                      src="static/assets/delete.svg"
+                      style="height: 24px; width: 24px"
+                    />
+                  </a>
+                </div>
+
+              </div>
+
+              <hr />
+
+              <div class="card-body" style="text-align: left">
+                <div style="display: flex; justify-content: space-between">
+                  <div>
+                    <p style="font-size: 12px; margin: 4px 0px">{{ task["creation_date"] }}</p>
+                    <p style="overflow: auto">{{ task["desc"] }}</p>
+                  </div>
+
+                  <!-- Priority Indicator -->
+                  {% if task["priority"]|int <= 3 %}
+                    <div class="priority-indicator" style="background-color: red;"></div>
+                  {% elif task["priority"]|int <= 7 %}
+                    <div class="priority-indicator" style="background-color: yellow;"></div>
+                  {% else %}
+                    <div class="priority-indicator" style="background-color: greenyellow;"></div>
+                  {% endif %}
+
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          {% else %}
+          <h4 style="text-align: center; color: #555">
+            No Tasks in the List !!
+          </h4>
+          {% endif %}
+        </div>
+
+        <!-- Add Task Form Section -->
+        <div id="add-task-form-section" style="display: none">
+          <form action="/create" method="POST" style="justify-content: center">
+
+            <table class="none">
+
+              <!-- <tr>
+                <td>
+                  <b><big><label>Create new task:</label></big></b>
+                </td>
+              </tr> -->
+
+              <tr>
+                <td>
+                  <input
+                    type="text"
+                    name="name"
+                    style="width: 50%; border: 2px solid darkgray;"
+                    placeholder="Name"
+                    required
+                  />
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  <textarea
+                    name="desc"
+                    rows="1"
+                    cols="30"
+                    style="width: 50%; border: 2px solid darkgray;"
+                    placeholder="Description"
+                    required
+                  ></textarea>
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  <input
+                    type="date"
+                    name="creation_date"
+                    style="width: 50%; border: 2px solid darkgray;"
+                    placeholder="Date"
+                    required
+                  />
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  <input
+                    type="number"
+                    name="priority"
+                    style="width: 50%; border: 2px solid rgb(166, 166, 166);"
+                    placeholder="Priority (1..10)"
+                    min="1"
+                    max="10"
+                    required
+                  />
+                </td>
+              </tr>
+
+              <tr>
+                <td><button type="submit">Create</button></td>
+              </tr>
+            </table>
+
+          </form>
+
+        </div>
+
+      </div>
+    </main>
+
+    <script>
+      // JavaScript to toggle between task list and add task form
+      function toggleAddTaskForm() {
+        const taskListSection = document.getElementById("task-list-section");
+        const addTaskFormSection = document.getElementById(
+          "add-task-form-section"
+        );
+        const addTaskButton = document.getElementById("show-add-task-form");
+
+        if (addTaskFormSection.style.display === "none") {
+          addTaskFormSection.style.display = "flex";
+          taskListSection.style.display = "none";
+          addTaskButton.style.display = "none";
+        } else {
+          addTaskFormSection.style.display = "none";
+          taskListSection.style.display = "flex";
+          addTaskButton.style.display = "flex";
+        }
+      }
+    </script>
+
+    <footer>
+      <p style="text-align: center">
+        &COPY; 2025 Task management. All rights reserved.
+      </p>
+    </footer>
+
+  </body>
+</html>

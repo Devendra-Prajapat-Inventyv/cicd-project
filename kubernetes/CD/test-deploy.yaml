@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: production-test
+  namespace: deploy-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: example
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: example
+    spec:
+      containers:
+        - envFrom:
+            - secretRef:
+                name: production-env
+          image: 'yagnesh.com:30002/inventyv/production:v0.0.12'
+          imagePullPolicy: Always
+          name: poding
