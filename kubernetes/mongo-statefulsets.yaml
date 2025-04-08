@@ -22,7 +22,7 @@ spec:
   accessModes:
     - ReadWriteOnce  # Changed from ReadWriteOnce (hostPath does not support RWX)
   hostPath:
-    path: /home/yagnesh/volumes/mongodb1
+    path: /home/Devendra/volume/mongodb1
   storageClassName: mongo-sc
   nodeAffinity:
     required:
@@ -31,7 +31,7 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - yagnesh
+                - master
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -43,7 +43,7 @@ spec:
   accessModes:
     - ReadWriteOnce  # Changed from ReadWriteOnce (hostPath does not support RWX)
   hostPath:
-    path: /home/yagnesh/volumes/mongodb2
+    path: /home/Devendra/volume/mongodb2
   storageClassName: mongo-sc
   nodeAffinity:
     required:
@@ -52,7 +52,7 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - yagnesh
+                - master
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -64,7 +64,7 @@ spec:
   accessModes:
     - ReadWriteOnce  # Changed from ReadWriteOnce (hostPath does not support RWX)
   hostPath:
-    path: /home/yagnesh/volumes/mongodb3
+    path: /home/Devendra/volume/mongodb3
   storageClassName: mongo-sc
   nodeAffinity:
     required:
@@ -73,7 +73,7 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - yagnesh
+                - master
 ---
 apiVersion: apps/v1
 kind: StatefulSet
